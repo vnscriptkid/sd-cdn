@@ -11,7 +11,7 @@ class BlogShow extends Component {
     if (this.props.blog.imageUrl) {
       return (
         <img
-          src={`https://d38ap9bqzjdbpl.cloudfront.net/${this.props.blog.imageUrl}`}
+          src={this.props.blog.imageUrl}
         />
       );
     }

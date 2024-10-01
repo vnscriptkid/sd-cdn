@@ -5,3 +5,5 @@ nohup.out
 public
 .env.development
 macos-carousell.pem
+private_key.pem
+public_key.pem

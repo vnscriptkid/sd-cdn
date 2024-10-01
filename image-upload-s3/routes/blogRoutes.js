@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
 const requireLogin = require('../middlewares/requireLogin');
 const cleanCache = require('../middlewares/cleanCache');
+const { generateCloudFrontSignedUrl } = require('../services/cloudfront');
 
 const Blog = mongoose.model('Blog');
+
+const CLOUDFRONT_URL = 'https://d193jef55n4bps.cloudfront.net'
 
 module.exports = app => {
   app.get('/api/blogs/:id', requireLogin, async (req, res) => {
@@ -10,6 +13,14 @@ module.exports = app => {
       _user: req.user.id,
       _id: req.params.id
     });
+
+    // Construct the resource URL
+    const resourceUrl = `${CLOUDFRONT_URL}/${blog.imageUrl}`;
+
+    // Generate the signed URL
+    const signedUrl = generateCloudFrontSignedUrl(resourceUrl);
+
+    blog.imageUrl = signedUrl
 
     res.send(blog);
   });

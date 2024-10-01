@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-cloudfront-sign": "^3.0.2",
     "aws-sdk": "2.188.0",
     "body-parser": "1.17.2",
     "concurrently": "3.5.0",

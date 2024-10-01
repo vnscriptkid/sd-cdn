@@ -13,6 +13,7 @@ const s3 = new AWS.S3({
 
 module.exports = (app) => {
   app.get('/api/upload', requireLogin, (req, res) => {
+    // s3://image-upload-app/{userId}/{fileName}
     const key = `${req.user.id}/${uuid()}.jpeg`;
 
     s3.getSignedUrl(
@@ -21,6 +22,7 @@ module.exports = (app) => {
         Bucket: 'image-upload-app',
         ContentType: 'image/jpeg',
         Key: key,
+        Expires: 60 * 5, // 5 minutes
       },
       (err, url) => res.send({ key, url })
     );

@@ -1,4 +1,7 @@
 up:
+	docker-compose up -d mongo redis
+
+up_app:
 	docker-compose up -d
 
 up_build:

@@ -172,3 +172,67 @@ sequenceDiagram
     end
 
 ```
+
+## Private image
+- S3 setup
+  - Permissions > Bucket Policy > Block all public access: checked
+  - Delete existing bucket policies
+- CloudFront setup
+  - Create distribution
+    - Origin Domain Name: `image-upload-app.s3.ap-southeast-1.amazonaws.com`
+    - Origin Access > Origin access control settings > Create new OAC -> Sign requests
+    - Restrict viewer access > Yes > Trusted singers > Self (current account)
+    - Viewer protocol policy: Redirect HTTP to HTTPS
+    - Allow HTTP methods: GET and HEAD
+- Add bucket policy to S3
+```json
+{
+    "Version": "2008-10-17",
+    "Id": "PolicyForCloudFrontPrivateContent",
+    "Statement": [
+        {
+            "Sid": "AllowCloudFrontServicePrincipal",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudfront.amazonaws.com"
+            },
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::image-upload-app/*",
+            "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": "arn:aws:cloudfront::658269753957:distribution/E1B456E6CVKV14"
+                }
+            }
+        }
+    ]
+}
+```
+- Generate keys
+```sh
+# Generate a 2048-bit private key
+openssl genrsa -out private_key.pem 2048
+# Extract the public key from the private key
+openssl rsa -pubout -in private_key.pem -out public_key.pem
+```
+- Upload public key to AWS: Key management > public keys
+- Create key groups -> Add THE public key
+- Bind key groups to distribution
+  - Distributions > Select distribution > Behaviors > Edit
+    - Restrict viewer access > Yes > Trusted key groups > Select THE key group
+- Generate signed url
+```js
+const { getSignedUrl } = require('aws-cloudfront-sign');
+
+function generateCloudFrontSignedUrl(url) {
+  // URL in format: {distribution_domain_name}/{user_id}/{filename}
+  // e.g: https://d193jef55n4bps.cloudfront.net/user123/image.jpg
+  const signedUrl = getSignedUrl(url, {
+    keypairId: CLOUDFRONT_PUBLIC_KEY_ID,
+    privateKeyString: CLOUDFRONT_PRIVATE_KEY,
+    // URL expires in 5 minutes in milliseconds
+    expireTime: Date.now() + 60 * 5 * 1000,
+  });
+
+  return signedUrl;
+}
+```
